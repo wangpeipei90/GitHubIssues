@@ -38,308 +38,6 @@ subQueries_shortPhp={"queryString": "'regex' state:closed updated:<2019-02-01 la
 subQueries_shortRuby={"queryString": "'regex' state:closed updated:<2019-02-01 language:Ruby","first": res_size}
 
 
-query_first = """
-{{
-    rateLimit {{
-        remaining
-        resetAt
-    }}
-    
-    search(query: "{queryString}", type: ISSUE, first: {first}) {{
-        issueCount
-        edges {{
-            cursor
-            node {{
-            ... on Issue {{
-                title
-                bodyText
-                number
-                url
-                state
-                createdAt
-                updatedAt
-                closedAt
-                comments {{
-                    totalCount
-                }}            
-                labels {{
-                    totalCount
-                }}
-                participants {{
-                    totalCount
-                }}
-                repository {{
-                    id
-                    nameWithOwner
-                    description
-                    url
-                    createdAt
-                    updatedAt
-                    pushedAt
-                    diskUsage
-                    primaryLanguage {{
-                      name
-                    }}
-                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
-                      totalCount
-                      totalSize
-                      edges {{
-                        size
-                        node {{
-                          name
-                        }}
-                      }}
-                    }}
-                    forkCount
-                    stargazers {{
-                      totalCount
-                    }}
-                    watchers {{
-                      totalCount
-                    }}
-                    releases {{
-                      totalCount
-                    }}
-                    pullRequests {{
-                      totalCount
-                    }}
-                    issues {{
-                      totalCount
-                    }}
-                    assignableUsers {{
-                      totalCount
-                    }}
-                    collaborators{{
-                      totalCount
-                    }}
-                }}
-            }}
-            ... on PullRequest {{
-                title
-                bodyText
-                number
-                url
-                merged
-                createdAt
-                updatedAt
-                closedAt
-                lastEditedAt
-                publishedAt
-                commits {{
-                    totalCount
-                }}
-                comments {{
-                    totalCount
-                }}
-                labels {{
-                    totalCount
-                }}
-                participants {{
-                    totalCount
-                }}
-          
-                repository {{
-                    id
-                    nameWithOwner
-                    description
-                    url
-                    createdAt
-                    updatedAt
-                    pushedAt
-                    diskUsage
-                    primaryLanguage {{
-                      name
-                    }}
-                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
-                      totalCount
-                      totalSize
-                      edges {{
-                        size
-                        node {{
-                          name
-                        }}
-                      }}
-                    }}
-                    forkCount
-                    stargazers {{
-                      totalCount
-                    }}
-                    watchers {{
-                      totalCount
-                    }}
-                    releases {{
-                      totalCount
-                    }}
-                    pullRequests {{
-                      totalCount
-                    }}
-                    issues {{
-                      totalCount
-                    }}
-                    assignableUsers {{
-                      totalCount
-                    }}
-                    collaborators{{
-                      totalCount
-                    }}
-                }}
-            }}
-        }}
-    }}
-  }}
-}}
-"""
-##mergedAt: DateTime
-query_next = """
-{{
-    rateLimit {{
-        remaining
-        resetAt
-    }}
-    search(query: "{queryString}", type: ISSUE, after: "{afterCursor}", first: {first}) {{
-        edges {{
-            cursor
-            node {{
-            ... on Issue {{
-                title
-                bodyText
-                number
-                url
-                state
-                createdAt
-                updatedAt
-                closedAt
-                comments {{
-                    totalCount
-                }}            
-                labels {{
-                    totalCount
-                }}
-                participants {{
-                    totalCount
-                }}
-                repository {{
-                    id
-                    nameWithOwner
-                    description
-                    url
-                    createdAt
-                    updatedAt
-                    pushedAt
-                    diskUsage
-                    primaryLanguage {{
-                      name
-                    }}
-                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
-                      totalCount
-                      totalSize
-                      edges {{
-                        size
-                        node {{
-                          name
-                        }}
-                      }}
-                    }}
-                    forkCount
-                    stargazers {{
-                      totalCount
-                    }}
-                    watchers {{
-                      totalCount
-                    }}
-                    releases {{
-                      totalCount
-                    }}
-                    pullRequests {{
-                      totalCount
-                    }}
-                    issues {{
-                      totalCount
-                    }}
-                    assignableUsers {{
-                      totalCount
-                    }}
-                    collaborators{{
-                      totalCount
-                    }}
-                }}
-            }}
-            ... on PullRequest {{
-                title
-                bodyText
-                number
-                url
-                merged
-                createdAt
-                updatedAt
-                closedAt
-                lastEditedAt
-                publishedAt
-                commits {{
-                    totalCount
-                }}
-                comments {{
-                    totalCount
-                }}
-                labels {{
-                    totalCount
-                }}
-                participants {{
-                    totalCount
-                }}
-          
-                repository {{
-                    id
-                    nameWithOwner
-                    description
-                    url
-                    createdAt
-                    updatedAt
-                    pushedAt
-                    diskUsage
-                    primaryLanguage {{
-                      name
-                    }}
-                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
-                      totalCount
-                      totalSize
-                      edges {{
-                        size
-                        node {{
-                          name
-                        }}
-                      }}
-                    }}
-                    forkCount
-                    stargazers {{
-                      totalCount
-                    }}
-                    watchers {{
-                      totalCount
-                    }}
-                    releases {{
-                      totalCount
-                    }}
-                    pullRequests {{
-                      totalCount
-                    }}
-                    issues {{
-                      totalCount
-                    }}
-                    assignableUsers {{
-                      totalCount
-                    }}
-                    collaborators{{
-                      totalCount
-                    }}
-                }}
-            }}
-        }}
-    }}
-  }}
-}}
-"""
-
 def run_query(query): # A simple function to use requests.post to make the API call. Note the json= section.
     request = requests.post('https://api.github.com/graphql', json={'query': query}, headers=headers)
 #     print("request return code - {}".format(request.status_code))
@@ -380,7 +78,7 @@ def checkTokenLimit():
     
 def run_first_query(query_id,subQuery):
     print("{} th query".format(query_id))
-    result = run_query(query_first.format(**subQuery))
+    result = run_query(getFirstQueryIssueSearch(subQuery))
     
     totalCount=result['data']['search']['issueCount']
     print("total issueCount - {}".format(totalCount))
@@ -391,21 +89,18 @@ def run_first_query(query_id,subQuery):
     n_issues=len(result['data']['search']['edges'])
     if n_issues<res_size:
         raise Exception("Not enough data returned, return size - {}, query size - {}".format(n_issues,res_size))
+     
+    lastCursor=result['data']['search']['pageInfo']['endCursor']
+    hasNextPage=result['data']['search']['pageInfo']['hasNextPage']
     
-    
-    
-    lastCursor=result['data']['search']['edges'][n_issues-1]['cursor']
     print("FirstQuery lastCursor - {}".format(lastCursor))
-    
-          
-    return result,lastCursor,remain_token
+     
+    return result,hasNextPage,lastCursor,remain_token
 
 def run_next_query(query_id,subQuery,lastCursor):
     print("{} th query".format(query_id))
     
-    subQuery['afterCursor']=lastCursor
-    print("Set lastCursor - {}".format(lastCursor))
-    result = run_query(query_next.format(**subQuery))
+    result = run_query(getNextQueryIssueSearch(subQuery,lastCursor))
     
     if 'data' not in result:
         print(result)
@@ -418,10 +113,11 @@ def run_next_query(query_id,subQuery,lastCursor):
     if n_issues<res_size:
         raise Exception("Not enough data returned, return size - {}, query size - {}".format(n_issues,res_size))
     
-    lastCursor=result['data']['search']['edges'][n_issues-1]['cursor']
+    lastCursor=result['data']['search']['pageInfo']['endCursor']
+    hasNextPage=result['data']['search']['pageInfo']['hasNextPage']
     print("NextQuery lastCursor - {}".format(lastCursor))
 
-    return result,lastCursor,remain_token
+    return result,hasNextPage,lastCursor,remain_token
 
 def parseRepoInfo(repo):
     if repo['primaryLanguage'] is not None and 'name' in repo['primaryLanguage']:
@@ -458,28 +154,27 @@ def query_issue(subQuery,ws):
     print("times - {}".format(times))
     
     query_id=1
-    result,lastCursor,remain_token=run_first_query(query_id,subQuery)
+    result,hasNextPage,lastCursor,remain_token=run_first_query(query_id,subQuery)
     parseSaveResultInfo(result,query_id,ws)
        
     #times=10
-    while query_id<=times:
-        query_afterCursor=lastCursor
+    while hasNextPage:
         if remain_token>0:
             query_id+=1
-            result,lastCursor,remain_token=run_next_query(query_id,subQuery,query_afterCursor)
+            result,hasNextPage,lastCursor,remain_token=run_next_query(query_id,subQuery,lastCursor)
             parseSaveResultInfo(result,query_id,ws)
         else:
             sleep(3600)
             while checkTokenLimit()<4000:
                 sleep(60)
 
-def query_issueFollowing(query_id,lastCursor,times,subQuery,ws):
+def query_issueFollowing(query_id,lastCursor,subQuery,ws):
     remain_token=checkTokenLimit()
-    while query_id<=times:
+    hasNextPage=True
+    while hasNextPage:
 #     if query_id<=times:
-        query_afterCursor=lastCursor
         if remain_token>0:
-            result,lastCursor,remain_token=run_next_query(query_id,subQuery,query_afterCursor)
+            result,hasNextPage,lastCursor,remain_token=run_next_query(query_id,subQuery,lastCursor)
             parseSaveResultInfo(result,query_id,ws)
             query_id+=1
         else:
@@ -488,6 +183,244 @@ def query_issueFollowing(query_id,lastCursor,times,subQuery,ws):
             while checkTokenLimit()<4000:
                 sleep(60)
 
+def getFirstQueryIssueSearch(variables):
+    query_first = """
+{{
+    rateLimit {{
+        remaining
+        resetAt
+    }}
+    
+    search(query: "{queryString}", type: ISSUE, first: {first}) {{
+        issueCount
+        pageInfo {{
+          hasNextPage
+          endCursor
+        }}
+        edges {{
+            node {{
+            __typename
+            ... on Issue {{
+                title
+                bodyText
+                number
+                url
+                state
+                createdAt
+                updatedAt
+                closedAt
+                comments {{
+                    totalCount
+                }}            
+                labels {{
+                    totalCount
+                }}
+                participants {{
+                    totalCount
+                }}
+                repository {{
+                    ... repoInfo
+                }}
+            }}
+            ... on PullRequest {{
+                title
+                bodyText
+                number
+                url
+                merged
+                createdAt
+                updatedAt
+                closedAt
+                lastEditedAt
+                publishedAt
+                commits {{
+                    totalCount
+                }}
+                comments {{
+                    totalCount
+                }}
+                labels {{
+                    totalCount
+                }}
+                participants {{
+                    totalCount
+                }}
+          
+                repository {{
+                    ... repoInfo
+                }}
+            }}
+        }}
+    }}
+  }}
+}}
+fragment repoInfo on Repository {{
+                    id
+                    nameWithOwner
+                    description
+                    url
+                    createdAt
+                    updatedAt
+                    pushedAt
+                    diskUsage
+                    primaryLanguage {{
+                      name
+                    }}
+                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
+                      totalCount
+                      totalSize
+                      edges {{
+                        size
+                        node {{
+                          name
+                        }}
+                      }}
+                    }}
+                    forkCount
+                    stargazers {{
+                      totalCount
+                    }}
+                    watchers {{
+                      totalCount
+                    }}
+                    releases {{
+                      totalCount
+                    }}
+                    pullRequests {{
+                      totalCount
+                    }}
+                    issues {{
+                      totalCount
+                    }}
+                    assignableUsers {{
+                      totalCount
+                    }}
+                    collaborators{{
+                      totalCount
+                    }}
+                }}
+"""
+    return query_first.format(**variables)
+
+def getNextQueryIssueSearch(variables,endCursor):
+    query_first = """
+{{
+    rateLimit {{
+        remaining
+        resetAt
+    }}
+    
+    search(query: "{queryString}", type: ISSUE, after: "{endCursor}", first: {first}) {{
+        issueCount
+        pageInfo {{
+          hasNextPage
+          endCursor
+        }}
+        edges {{
+            node {{
+            __typename
+            ... on Issue {{
+                title
+                bodyText
+                number
+                url
+                state
+                createdAt
+                updatedAt
+                closedAt
+                comments {{
+                    totalCount
+                }}            
+                labels {{
+                    totalCount
+                }}
+                participants {{
+                    totalCount
+                }}
+                repository {{
+                    ... repoInfo
+                }}
+            }}
+            ... on PullRequest {{
+                title
+                bodyText
+                number
+                url
+                merged
+                createdAt
+                updatedAt
+                closedAt
+                lastEditedAt
+                publishedAt
+                commits {{
+                    totalCount
+                }}
+                comments {{
+                    totalCount
+                }}
+                labels {{
+                    totalCount
+                }}
+                participants {{
+                    totalCount
+                }}
+          
+                repository {{
+                    ... repoInfo
+                }}
+            }}
+        }}
+    }}
+  }}
+}}
+fragment repoInfo on Repository {{
+                    id
+                    nameWithOwner
+                    description
+                    url
+                    createdAt
+                    updatedAt
+                    pushedAt
+                    diskUsage
+                    primaryLanguage {{
+                      name
+                    }}
+                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
+                      totalCount
+                      totalSize
+                      edges {{
+                        size
+                        node {{
+                          name
+                        }}
+                      }}
+                    }}
+                    forkCount
+                    stargazers {{
+                      totalCount
+                    }}
+                    watchers {{
+                      totalCount
+                    }}
+                    releases {{
+                      totalCount
+                    }}
+                    pullRequests {{
+                      totalCount
+                    }}
+                    issues {{
+                      totalCount
+                    }}
+                    assignableUsers {{
+                      totalCount
+                    }}
+                    collaborators{{
+                      totalCount
+                    }}
+                }}
+"""     
+    variables["endCursor"]=endCursor
+    return query_first.format(**variables)
 
 def getFirstQueryCmtMsgPerRepo(owner,name,first):
     query_first='''
@@ -550,7 +483,64 @@ def getNextQueryCmtMsgPerRepo(owner,name,first,endCursor):
     '''
     variables={"owner": owner,"first":first,"name":name,"endCursor":endCursor}
     return query_next.format(**variables)     
-    
+
+def getFirstQueryMsgPerPRRepo(owner,name,id_pr,first):
+    query_first='''
+{{
+  repository(owner: {owner}, name: {name}) {{
+    pullRequest(number: {prID}) {{
+      title
+      bodyText
+      commits(first: {first}) {{
+        totalCount
+          pageInfo{{
+            hasNextPage
+            endCursor
+          }}
+        edges {{
+          node {{
+            commit {{
+              oid
+              message
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+'''
+    variables={"owner": owner,"first":first,"name":name,"prID":id_pr}
+    return query_first.format(**variables)
+
+def getNextQueryMsgPerPRRepo(owner,name,id_pr,first,endCursor):
+    query_first='''
+{{
+  repository(owner: {owner}, name: {name}) {{
+    pullRequest(number: {prID}) {{
+      title
+      bodyText
+      commits(first: {first} after: {endCursor}) {{
+        totalCount
+          pageInfo{{
+            hasNextPage
+            endCursor
+          }}
+        edges {{
+          node {{
+            commit {{
+              oid
+              message
+            }}
+          }}
+        }}
+      }}
+    }}
+  }}
+}}
+'''
+    variables={"owner": owner,"first":first,"name":name,"prID":id_pr,"endCursor":endCursor}
+    return query_first.format(**variables)      
 if __name__ == '__main__':
 #     checkTokenLimit()
     query_issue(subQueries_shortPhp,"/home/peipei/GitHubIssues/php/shortKey")

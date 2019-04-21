@@ -12,44 +12,56 @@ from itertools import chain
 import glob
 from github import Github
 import re
+import UniqueQueryResults
 
 # keywords=["close","closes","closed","fix","fixes","fixed","resolve","resolves","resolved"]
 r=re.compile("(?i)(close|close[sd]|fix|fixe[sd]|resolve|resolve[sd]):?\s*#(\d+)")
-
+ws="/home/peipei/GitHubIssues/"
 def getLinkedIssueNum(msg):
-#     msg="Closes #757\n Closes #860"
-#print(getLinkedIssueNum('close an issue'))
     m=r.findall(msg)
-#     print(m)
     return [issue_id for key,issue_id in m] if len(m)>0 else None
 
-def isPRLinked2Issue(github,pr_url="https://github.com/instedd/guisso/pull/51"):
-    # pr_url https://github.com/PyGithub/PyGithub/pull/1090 https://github.com/instedd/guisso/pull/51
-    # return issue url: if not linked return empty list else return issue url string "34"   
+def isPRLinked2Issue(github,pr_url):
+    ## with GitHub REST API V3
+    # pr_url https://github.com/PyGithub/PyGithub/pull/1090
+    # return issue url: if not linked return empty list else return issue url string   
     elements=pr_url.split("/")
 #     print(elements)
-    user,repo_name,is_pr,id=tuple(elements[3:])
+    owner,repo_name,is_pr,id=tuple(elements[3:])
     if is_pr!="pull":
         raise ValueError("isLinked2Issue should pass in a PR URL")
-    repo=github.get_repo(user+"/"+repo_name)
+    repo=github.get_repo(owner+"/"+repo_name)
     pr=repo.get_pull(int(id))
     
     candidates=[pr.title,pr.body]
     candidates.extend([cmt.commit.message for cmt in pr.get_commits()])
-    candidates=list(set([msg for msg in candidates if msg is not None and msg!='']))
+    candidates=[msg for msg in set(candidates) if msg is not None and msg!='']
     
     isLinked=chain(*[x for x in [getLinkedIssueNum(msg) for msg in candidates] if x is not None])
     return ["{}issues/{}".format(pr_url[:pr_url.index(is_pr)],x) for x in isLinked]
 
-def getLang(file="/home/peipei/GitHubIssues/python/shortKey/data_52_6.json"):
+def isPRLinked2Issue2(pr_url):
+    ## with GitHub GraphQL API V4
+    # pr_url https://github.com/PyGithub/PyGithub/pull/1090
+    # return issue url: if not linked return empty list else return issue url string   
+    elements=pr_url.split("/")
+#     print(elements)
+    owner,repo_name,is_pr,id=tuple(elements[3:])
+    if is_pr!="pull":
+        raise ValueError("isLinked2Issue should pass in a PR URL")
+    
+    isLinked=UniqueQueryResults.getMsgPerPRRepo(owner, repo_name, id, 10)
+    return ["{}issues/{}".format(pr_url[:pr_url.index(is_pr)],x) for x in isLinked]
+
+def getLang(file):
     # return from which lang the issue is found
-    prefix_len=len("/home/peipei/GitHubIssues/")
+    prefix_len=len(ws)
     sub_filename=file[prefix_len:]
     loc_index=sub_filename.index("/")
     return sub_filename[:loc_index]
 
-def isPR(issue_url="https://github.com/androguard/androguard/issues/545"):
-    #issue_url: pr https://github.com/Ultimaker/Cura/pull/5636
+def isPR(issue_url):
+    #issue_url: pr_url 
     loc_index=issue_url.rindex("/")
     if issue_url[loc_index-6:loc_index]=="issues":
         return False
@@ -308,10 +320,9 @@ if __name__ == '__main__':
 #     printInfo2CSV("/dict_url2info_f","/issueInfo_f.csv")
 #     printInfo2CSV("/dict_url2info_ff","/issueInfo_ff.csv")
     
-    g = Github("870589d0ca53859c2e4e54f71b1bdce3af5e609f")
-# #     print(isPRLinked2Issue(g,"https://github.com/PyGithub/PyGithub/pull/1074"))
+#     g = Github("870589d0ca53859c2e4e54f71b1bdce3af5e609f")
 #     getPRLinkedIssuenfo("/dict_url2info_ff",g)
-    getPRLinkedIssuenfo("/dict_url2info_f",g)
+#     getPRLinkedIssuenfo("/dict_url2info_f",g)
     
     pass
 

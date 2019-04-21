@@ -96,6 +96,8 @@ langs=c("java","python","javascript","php","ruby")
 filenames=c("issueInfo.csv","issueInfo_f.csv","issueInfo_ff.csv")
 for (i in 1:length(filenames)) { 
   name=filenames[i]
+  df=data.frame()
+  for (k in names) df[[k]]<-as.numeric()
   for (j in 1:length(langs)){
     lang=langs[j]
     data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
@@ -103,5 +105,17 @@ for (i in 1:length(filenames)) {
     message(sprintf("file name: %s lang: %s",name,lang))
     print(nrow(issueInfo))
     message(sprintf("report:%d pr:%d merged:%d not merged:%d",sum(!issueInfo$is_pr),sum(issueInfo$is_pr),sum(issueInfo$is_pr & issueInfo$merged),sum(issueInfo$is_pr & !issueInfo$merged)))
+    
+    print("duration")
+    print(getSummary(issueInfo$duration))
+    print("participants")
+    print(getSummary(issueInfo$participants))
+    print("comments")
+    print(getSummary(issueInfo$comments))
+    print("labels")
+    print(getSummary(issueInfo$labels))
+    
+    rbind(df,issueInfo)
   }
+  print(length(df))
 }
