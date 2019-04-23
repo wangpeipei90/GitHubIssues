@@ -97,7 +97,6 @@ filenames=c("issueInfo.csv","issueInfo_f.csv","issueInfo_ff.csv")
 for (i in 1:length(filenames)) { 
   name=filenames[i]
   df=data.frame()
-  for (k in names) df[[k]]<-as.numeric()
   for (j in 1:length(langs)){
     lang=langs[j]
     data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
@@ -115,7 +114,15 @@ for (i in 1:length(filenames)) {
     print("labels")
     print(getSummary(issueInfo$labels))
     
-    rbind(df,issueInfo)
+    df=rbind(df,issueInfo)
   }
-  print(length(df))
+  print(nrow(df))
+  print("across lang duration")
+  print(getSummary(df$duration))
+  print("across lang participants")
+  print(getSummary(df$participants))
+  print("across lang comments")
+  print(getSummary(df$comments))
+  print("across lang labels")
+  print(getSummary(df$labels))
 }

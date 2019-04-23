@@ -51,48 +51,6 @@ p=p+stat_summary(fun.y=mean, geom="point", shape=20, size=10, color="red", fill=
 # p=p+scale_x_discrete(labels=c("Intersection","Addition","Removal"))
 #ggsave("abc")
 
-name="repoInfo.csv"
-lang="python"
-langs=c("java","python","javascript","php","ruby")
-filenames=c("repoInfo.csv","repoInfo_f.csv","repoInfo_ff.csv")
-for (i in 1:length(filenames)) { 
-  name=filenames[i]
-  # for (j in 1:length(langs)){
-  #   lang=langs[j]
-  #   data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
-  #   repoInfo=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-  #                                                                  "character","integer","integer","integer","integer",
-  #                                                                  "integer","integer","integer","integer","integer"), sep=",")
-  #   message(sprintf("file name: %s lang: %s",name,lang))
-  #   print(getSummary(repoInfo$files/log(repoInfo$sizeLang)))
-  # }
-  data_file=paste("/home/peipei/GitHubIssues","java",name, sep = "/", collapse = NULL)
-  repoInfo_java=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-                                                          "character","integer","integer","integer","integer",
-                                                          "integer","integer","integer","integer","integer"), sep=",")
-  data_file=paste("/home/peipei/GitHubIssues","python",name, sep = "/", collapse = NULL)
-  repoInfo_python=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-                                                               "character","integer","integer","integer","integer",
-                                                               "integer","integer","integer","integer","integer"), sep=",")
-  data_file=paste("/home/peipei/GitHubIssues","ruby",name, sep = "/", collapse = NULL)
-  repoInfo_ruby=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-                                                                 "character","integer","integer","integer","integer",
-                                                                 "integer","integer","integer","integer","integer"), sep=",")
-  data_file=paste("/home/peipei/GitHubIssues","javascript",name, sep = "/", collapse = NULL)
-  repoInfo_javascript=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-                                                               "character","integer","integer","integer","integer",
-                                                               "integer","integer","integer","integer","integer"), sep=",")
-  data_file=paste("/home/peipei/GitHubIssues","php",name, sep = "/", collapse = NULL)
-  repoInfo_php=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-                                                                     "character","integer","integer","integer","integer",
-                                                                     "integer","integer","integer","integer","integer"), sep=",")
-  
-  repoInfo=rbind(repoInfo_java,repoInfo_python,repoInfo_javascript,repoInfo_ruby,repoInfo_php)
-  print(nrow(repoInfo))
-  print(getSummary(repoInfo$files/log(repoInfo$sizeLang)))
-}
-
-
 
 data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
 repoInfo_python=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
@@ -163,3 +121,45 @@ getSummary(repoInfo$sizeLang/1024)
 # 3013.09101 399644.48633      0.00000     16.57559     53.13574    227.36035   1129.77441   4493.75371  10388.47734  27863.74715  49016.8085
 
 length(which(repoInfo$pullRequests>0 & repoInfo$stargazers>0 & repoInfo$releases>0 & repoInfo$issues>10 & repoInfo$assignableUsers>8)) #1115
+
+
+name="repoInfo.csv"
+lang="python"
+langs=c("java","python","javascript","php","ruby")
+filenames=c("repoInfo.csv","repoInfo_f.csv","repoInfo_ff.csv")
+for (i in 1:length(filenames)) { 
+  name=filenames[i]
+  df=data.frame()
+  for (j in 1:length(langs)){
+    lang=langs[j]
+    data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
+    repoInfo=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
+                                                                   "character","integer","integer","integer","integer",
+                                                                   "integer","integer","integer","integer","integer"), sep=",")
+    message(sprintf("file name: %s lang: %s",name,lang))
+    print(nrow(repoInfo))
+    print("stargazers")
+    print(getSummary(repoInfo$stargazers))
+    print("issues")
+    print(getSummary(repoInfo$issues))
+    print("releases")
+    print(getSummary(repoInfo$releases))
+    print("pullRequests")
+    print(getSummary(repoInfo$pullRequests))
+    print("assignableUsers")
+    print(getSummary(repoInfo$assignableUsers))
+    
+    df=rbind(df,repoInfo)
+  }
+  print(nrow(df))
+  print("across lang stargazers")
+  print(getSummary(df$stargazers))
+  print("across lang issues")
+  print(getSummary(df$issues))
+  print("across lang releases")
+  print(getSummary(df$releases))
+  print("across lang pullRequests")
+  print(getSummary(df$pullRequests))
+  print("across lang assignableUsers")
+  print(getSummary(df$assignableUsers))
+}
