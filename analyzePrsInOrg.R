@@ -1,5 +1,5 @@
-if (getwd()!="/home/peipei/GitHubIssues"){
-  setwd("/home/peipei/GitHubIssues")
+if (getwd()!="/home/peipei/GitHubIssues/Orgs/apache"){
+  setwd("/home/peipei/GitHubIssues/Orgs/apache")
 }
 library(ggplot2)
 getSummary=function(data){
@@ -11,11 +11,14 @@ getSummary=function(data){
   # return(c(t,quantile(data, c(0.1,0.25,0.5,0.75,0.9,0.95,0.98,0.99))))
 }
 
-# data_file="/home/peipei/GitHubIssues/type_repo_issue.csv"
-# data_file="/home/peipei/GitHubIssues/type_repo_issue_f.csv"
-data_file="/home/peipei/GitHubIssues/type_repo_issue_ff.csv"
-repoInfo=read.csv(file=data_file,head=TRUE,colClasses=c("character","character","integer"), sep=",")
-repoInfo=as.data.frame(repoInfo)
+data_file="repo_lang_file.csv"
+repoLangFile=read.csv(file=data_file,head=TRUE,colClasses=c("character","character","character"), sep=",")
+repoLangFile=as.data.frame(repoLangFile)
+
+sort(table(repoLangFile$primeLang)) ## prs in primary lang of repo
+dim(table(repoLangFile$repo_url)) ## == # of repos
+getSummary(table(repoLangFile$repo_url))  ## prs/repo
+
 
 t=repoInfo[which(repoInfo$type=="python"),]
 nrow(t)
@@ -54,8 +57,8 @@ p=p+stat_summary(fun.y=mean, geom="point", shape=20, size=10, color="red", fill=
 
 data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
 repoInfo_python=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-                                                        "character","integer","integer","integer","integer",
-                                                        "integer","integer","integer","integer","integer"), sep=",")
+                                                               "character","integer","integer","integer","integer",
+                                                               "integer","integer","integer","integer","integer"), sep=",")
 
 repoInfo=as.data.frame(repoInfo)
 sprintf("repo total: %s",nrow(repoInfo))
@@ -134,8 +137,8 @@ for (i in 1:length(filenames)) {
     lang=langs[j]
     data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
     repoInfo=read.csv(file=data_file,head=TRUE,colClasses=c("integer","character","character","character","integer",
-                                                                   "character","integer","integer","integer","integer",
-                                                                   "integer","integer","integer","integer","integer"), sep=",")
+                                                            "character","integer","integer","integer","integer",
+                                                            "integer","integer","integer","integer","integer"), sep=",")
     message(sprintf("file name: %s lang: %s",name,lang))
     print(nrow(repoInfo))
     print("stargazers")

@@ -95,7 +95,7 @@ def buildProjInfo(files):
     
     return proj_info
 
-def buildIssueInfo(file):
+def buildIssueInfo(file,is_pr=False):
     # file: issue file path
     # return dict as issue info with repo url
     issue_info=dict()
@@ -117,12 +117,13 @@ def buildIssueInfo(file):
         
         issue_info['is_pr']=False
         issue_info['merged']=False
-        if isPR(issue_info['url']):
+        if is_pr or isPR(issue_info['url']):
             issue_info['is_pr']=True
             issue_info['merged']=data['merged'] 
     return issue_info 
 
-def getUniqueIssues(dir):
+def getUniqueIssues(dir,is_pr=False):
+    ##is_pr false means we are not sure if it is a pr
     print("Processing dir-{}".format(dir))
     dict_file2url=dict()
     dict_url2info=dict()
@@ -136,10 +137,10 @@ def getUniqueIssues(dir):
             
             dict_file2url[file]=issue_url
             if issue_url in dict_url2info:
-#                 print("Duplicated url-{} file1-{} file2-{}".format(issue_url, file,dict_url2info[data['url']]))
+                print("Duplicated url-{} file1-{} file2-{}".format(issue_url, file,dict_url2info[data['url']]))
                 pass
             else:
-                dict_url2info[data['url']]=buildIssueInfo(file)
+                dict_url2info[data['url']]=buildIssueInfo(file,is_pr)
 
     print("unique issues in {} is {}".format(dir,len(dict_url2info)))
     return dict_file2url,dict_url2info
@@ -188,6 +189,60 @@ def getUniqueIssuesRepos():
     print("total unique issue-{} unique repo-{}".format(len(set(issues)),len(set(repos))))
 
 
+def getUniqueProjectsInOrg(dict_url2info,dir,org="apache"):
+    dict_repo2files=dict()
+    for issue_info in dict_url2info.values():
+        file=issue_info['file']
+        with open(file) as json_file:  
+            data = json.load(json_file)
+            repo_url=data['repository']['url']
+            if repo_url not in dict_repo2files:
+                dict_repo2files[repo_url]=[]
+#             else:
+#                 print("repo_url:{} existing files:{},{}".format(repo_url,file,dict_repo2files[repo_url]))
+            dict_repo2files[repo_url].append(file)
+            
+    print("unique PRs in org {} are from {} repos".format(org,len(dict_repo2files)))
+    pickle.dump(dict_repo2files,open(dir+"/dict_repo2files","wb"))
+    
+    dict_repo2info={repo_url:buildProjInfo(files) for repo_url,files in dict_repo2files.items()}
+    pickle.dump(dict_repo2info,open(dir+"/dict_repo2info","wb"))
+    return dict_repo2info
+
+def getUniquePRsInOrg(dir,org="apache"):   
+    dict_file2url,dict_url2info=getUniqueIssues(dir,True)    
+    print("unique PRs in org {} is {}".format(len(dict_url2info),org))
+    
+    pickle.dump(dict_file2url,open(dir+"/dict_file2url","wb"))
+    pickle.dump(dict_url2info,open(dir+"/dict_url2info","wb"))
+    
+    return dict_file2url,dict_url2info
+
+def getUniquePRsInOrgs(ws="/home/peipei/GitHubIssues/Orgs/"):
+    prs,repos=[],[]
+    for org in ["apache"]:
+        dict_file2url,dict_url2info=getUniquePRsInOrg(ws+org,org)
+        dict_repo2info=getUniqueProjectsInOrg(dict_url2info,ws+org,org)
+        
+        prs_urls,repo_urls=dict_url2info.keys(),dict_repo2info.keys()
+        prs.extend(prs)
+        repos.extend(repo_urls)
+    print("total unique issue-{} unique repo-{}".format(len(set(prs)),len(set(repos))))
+
+def getPRPerLangPerRepo(repo2info_file,file_csv,dir="/home/peipei/GitHubIssues/Orgs/apache/"):
+    #file_data: the name of the dict_rep2info file
+    res=[]
+    with open(dir+repo2info_file,"rb") as pickle_file:
+        dict_repo2info = pickle.load(pickle_file)
+        for repo_url, repo_info in dict_repo2info.items():
+            for file in repo_info['files']:
+                res.append({"repo_url":repo_url,"primeLang":repo_info['primaryLanguage'],"file":file})
+                
+    with open(dir+file_csv, 'w', encoding='utf8', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file,fieldnames=res[0].keys())
+        dict_writer.writeheader()
+        dict_writer.writerows(res)
+          
 def getIssuePerLangPerRepo(repo2info_file,file_csv):
     #file_data: the name of the dict_rep2info file
     res=[]
@@ -324,5 +379,7 @@ if __name__ == '__main__':
 #     getPRLinkedIssuenfo("/dict_url2info_ff",g)
 #     getPRLinkedIssuenfo("/dict_url2info_f",g)
     
+#     getUniquePRsInOrgs()
+    getPRPerLangPerRepo("/dict_repo2info","repo_lang_file.csv","/home/peipei/GitHubIssues/Orgs/apache/")
     pass
 
