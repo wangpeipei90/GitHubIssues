@@ -81,8 +81,49 @@ def getMsgPerPRRepo(owner, name, id_pr, first):
     print(issues)
     return issues
 
-if __name__ == '__main__':
-    getCmtMsgPerRepo("PyGithub","PyGithub",'100')
+
+def getPRsInOrg(org,first,ws="/home/peipei/GitHubIssues/Orgs/"):
+    query=GraphQLQuery.getFirstQueryPRsInOrg(org, first)
+    data=GraphQLQuery.run_query(query)
     
+    hasNextPage=data['data']['search']['pageInfo']['hasNextPage']
+    endCursor=data['data']['search']['pageInfo']['endCursor']
+    
+    totalCount=data['data']['search']['issueCount']
+    print("total issueCount - {}".format(totalCount))
+    
+#     n_issues=len(data['data']['search']['edges'])
+#     if n_issues<first:
+#         raise Exception("Not enough data returned, return size - {}, query size - {}".format(n_issues,res_size))
+#     
+#     print("FirstQuery endCursor - {}".format(endCursor))
+     
+    count,query_id,res=0,1,data['data']['search']['edges']
+    count+=len(res)
+    print("count:{} endCursor:{}".format(count,endCursor))
+    
+    GraphQLQuery.parseSaveResultInfo(res,query_id,ws+org)
+    while hasNextPage:
+        query_id+=1
+        query=GraphQLQuery.getNextQueryPRsInOrg(org, first, endCursor)
+        data=GraphQLQuery.run_query(query)
+#         print(data.keys())
+        if 'data' not in data:
+            print(query)
+            pprint(data)
+            break
+        hasNextPage=data['data']['search']['pageInfo']['hasNextPage']
+        endCursor=data['data']['search']['pageInfo']['endCursor']
+        
+        res=data['data']['search']['edges']
+        count+=len(res)
+        print("count:{} endCursor:{}".format(count,endCursor))
+        
+        GraphQLQuery.parseSaveResultInfo(res,query_id,ws+org)
+#     return data_msg
+
+if __name__ == '__main__':
+#     getCmtMsgPerRepo("PyGithub","PyGithub",'100')
+    getPRsInOrg("apache",10,ws="/home/peipei/GitHubIssues/Orgs/")
     pass
 

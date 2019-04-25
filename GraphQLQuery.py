@@ -142,9 +142,9 @@ def parseIssueInfo(issue):
     
 def parseSaveResultInfo(results,query_id,ws):
     id=-1
-    for info in results['data']['search']['edges']:
+    for info in results:
         obj=parseIssueInfo(info['node'])
-        obj['cursor']=info['cursor']
+#         obj['cursor']=info['cursor']
         id+=1
         with open(ws+'/data_'+str(query_id)+"_"+str(id)+'.json', 'w') as outfile:
             json.dump(obj, outfile)
@@ -155,14 +155,14 @@ def query_issue(subQuery,ws):
     
     query_id=1
     result,hasNextPage,lastCursor,remain_token=run_first_query(query_id,subQuery)
-    parseSaveResultInfo(result,query_id,ws)
+    parseSaveResultInfo(result['data']['search']['edges'],query_id,ws)
        
     #times=10
     while hasNextPage:
         if remain_token>0:
             query_id+=1
             result,hasNextPage,lastCursor,remain_token=run_next_query(query_id,subQuery,lastCursor)
-            parseSaveResultInfo(result,query_id,ws)
+            parseSaveResultInfo(result['data']['search']['edges'],query_id,ws)
         else:
             sleep(3600)
             while checkTokenLimit()<4000:
@@ -175,7 +175,7 @@ def query_issueFollowing(query_id,lastCursor,subQuery,ws):
 #     if query_id<=times:
         if remain_token>0:
             result,hasNextPage,lastCursor,remain_token=run_next_query(query_id,subQuery,lastCursor)
-            parseSaveResultInfo(result,query_id,ws)
+            parseSaveResultInfo(result['data']['search']['edges'],query_id,ws)
             query_id+=1
         else:
             print("sleep because of token limits")
@@ -514,7 +514,7 @@ def getFirstQueryMsgPerPRRepo(owner,name,id_pr,first):
     return query_first.format(**variables)
 
 def getNextQueryMsgPerPRRepo(owner,name,id_pr,first,endCursor):
-    query_first='''
+    query_next='''
 {{
   repository(owner: {owner}, name: {name}) {{
     pullRequest(number: {prID}) {{
@@ -540,7 +540,203 @@ def getNextQueryMsgPerPRRepo(owner,name,id_pr,first,endCursor):
 }}
 '''
     variables={"owner": owner,"first":first,"name":name,"prID":id_pr,"endCursor":endCursor}
-    return query_first.format(**variables)      
+    return query_next.format(**variables)      
+
+def getFirstQueryPRsInOrg(org,first):
+    query_first="""
+{{
+    rateLimit {{
+        remaining
+        resetAt
+    }}
+    
+    search(query: "{queryString}", type: ISSUE, first: {first}) {{
+        issueCount
+        pageInfo {{
+          hasNextPage
+          endCursor
+        }}
+        edges {{
+            node {{
+            __typename            
+            ... on PullRequest {{
+                title
+                bodyText
+                number
+                url
+                merged
+                createdAt
+                updatedAt
+                closedAt
+                lastEditedAt
+                publishedAt
+                commits {{
+                    totalCount
+                }}
+                comments {{
+                    totalCount
+                }}
+                labels {{
+                    totalCount
+                }}
+                participants {{
+                    totalCount
+                }}
+          
+                repository {{
+                    ... repoInfo
+                }}
+            }}
+        }}
+    }}
+  }}
+}}
+fragment repoInfo on Repository {{
+                    id
+                    nameWithOwner
+                    description
+                    url
+                    createdAt
+                    updatedAt
+                    pushedAt
+                    diskUsage
+                    primaryLanguage {{
+                      name
+                    }}
+                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
+                      totalCount
+                      totalSize
+                      edges {{
+                        size
+                        node {{
+                          name
+                        }}
+                      }}
+                    }}
+                    forkCount
+                    stargazers {{
+                      totalCount
+                    }}
+                    watchers {{
+                      totalCount
+                    }}
+                    releases {{
+                      totalCount
+                    }}
+                    pullRequests {{
+                      totalCount
+                    }}
+                    issues {{
+                      totalCount
+                    }}
+                    assignableUsers {{
+                      totalCount
+                    }}
+                    collaborators{{
+                      totalCount
+                    }}
+                }}
+"""
+    variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size}
+    return query_first.format(**variables)
+
+def getNextQueryPRsInOrg(org,first,endCursor):
+    query_next="""
+{{
+    rateLimit {{
+        remaining
+        resetAt
+    }}
+    
+    search(query: "{queryString}", type: ISSUE, after: "{endCursor}", first: {first}) {{
+        issueCount
+        pageInfo {{
+          hasNextPage
+          endCursor
+        }}
+        edges {{
+            node {{
+            __typename            
+            ... on PullRequest {{
+                title
+                bodyText
+                number
+                url
+                merged
+                createdAt
+                updatedAt
+                closedAt
+                lastEditedAt
+                publishedAt
+                commits {{
+                    totalCount
+                }}
+                comments {{
+                    totalCount
+                }}
+                labels {{
+                    totalCount
+                }}
+                participants {{
+                    totalCount
+                }}
+          
+                repository {{
+                    ... repoInfo
+                }}
+            }}
+        }}
+    }}
+  }}
+}}
+fragment repoInfo on Repository {{
+                    id
+                    nameWithOwner
+                    description
+                    url
+                    createdAt
+                    updatedAt
+                    pushedAt
+                    diskUsage
+                    primaryLanguage {{
+                      name
+                    }}
+                    languages(first: 20, orderBy: {{field: SIZE, direction: DESC}}) {{
+                      totalCount
+                      totalSize
+                      edges {{
+                        size
+                        node {{
+                          name
+                        }}
+                      }}
+                    }}
+                    forkCount
+                    stargazers {{
+                      totalCount
+                    }}
+                    watchers {{
+                      totalCount
+                    }}
+                    releases {{
+                      totalCount
+                    }}
+                    pullRequests {{
+                      totalCount
+                    }}
+                    issues {{
+                      totalCount
+                    }}
+                    assignableUsers {{
+                      totalCount
+                    }}
+                    collaborators{{
+                      totalCount
+                    }}
+                }}
+"""
+    variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size,"endCursor":endCursor}
+    return query_next.format(**variables)
 if __name__ == '__main__':
 #     checkTokenLimit()
     query_issue(subQueries_shortPhp,"/home/peipei/GitHubIssues/php/shortKey")
