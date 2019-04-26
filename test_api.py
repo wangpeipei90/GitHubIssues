@@ -38,6 +38,8 @@ class Test(unittest.TestCase):
         assert(res==["https://github.com/PyGithub/PyGithub/issues/1089"])
         res=api.isPRLinked2Issue2("https://github.com/instedd/guisso/pull/47")
         assert(res==[])
+        res=api.isPRLinked2Issue2("https://github.com/apache/incubator-shardingsphere/pull/1222")
+        assert(res==['https://github.com/apache/incubator-shardingsphere/issues/1045'])
            
     def test_getLang(self):
         res=api.getLang("/home/peipei/GitHubIssues/python/shortKey/data_52_6.json")
@@ -54,4 +56,5 @@ class Test(unittest.TestCase):
         assert(res==['1089'])
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.test_getLinkedIssueNum']
-    unittest.main()
+#     unittest.main()
+    Test().test_isPRLinked2Issue()

@@ -12,28 +12,36 @@ getSummary=function(data){
 }
 
 data_file="repo_lang_file.csv"
-repoLangFile=read.csv(file=data_file,head=TRUE,colClasses=c("character","character","character"), sep=",")
+repoLangFile=read.csv(file=data_file,head=TRUE,colClasses=c("character","character","character","logical"), sep=",")
 repoLangFile=as.data.frame(repoLangFile)
 
 sort(table(repoLangFile$primeLang)) ## prs in primary lang of repo
 dim(table(repoLangFile$repo_url)) ## == # of repos
 getSummary(table(repoLangFile$repo_url))  ## prs/repo
 
+t=split(repoLangFile,f=repoLangFile$repo_url) ## length(t)==num(repos)
+sort(table(sapply(t, function(repo)unique(repo$primeLang)))) ###  repos in primary langs
 
-t=repoInfo[which(repoInfo$type=="python"),]
-nrow(t)
-sum(t$files)
-getSummary(t$files)
+tt=split(repoLangFile,f=repoLangFile$primeLang)
+for(lang in c("Java","Python","JavaScript","Ruby")){
+  print(lang)
+  print(getSummary(table(tt[[lang]]$repo_url)))  ## prs/repo in each lang
+}
 
-t=repoInfo[which(repoInfo$type=="java"),]
-nrow(t)
-sum(t$files)
-getSummary(t$files)
+table(repoLangFile$merged) ## merged prs vs not merged prs
+for(lang in c("Java","Python","JavaScript","Ruby")){
+  print(lang)
+  print(table(tt[[lang]]$merged))  ## merged/repo in each lang
+}
 
-t=repoInfo[which(repoInfo$type=="ruby"),]
-nrow(t)
-sum(t$files)
-getSummary(t$files)
+s=as.data.frame(sort(table(repoLangFile$repo_url),decreasing = TRUE))#[1:10,] ## top 10 repos with most prs
+names(s)=c("repo","prs")
+s$primeLang=sapply(s$repo,function(x)unique(repoLangFile[which(repoLangFile$repo_url==x),"primeLang"])) ## with prime lang
+s$merged=sapply(s$repo,function(x)length(which(repoLangFile$repo_url==x & repoLangFile$merged==TRUE)))
+s$notMerged=sapply(s$repo,function(x)length(which(repoLangFile$repo_url==x & repoLangFile$merged==FALSE)))
+
+
+selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/pulsar'),]
 
 t=repoInfo[which(repoInfo$type=="php"),]
 nrow(t)

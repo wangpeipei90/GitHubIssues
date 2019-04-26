@@ -425,7 +425,7 @@ fragment repoInfo on Repository {{
 def getFirstQueryCmtMsgPerRepo(owner,name,first):
     query_first='''
     {{
-      repository(owner:{owner}, name:{name}) {{
+      repository(owner:"{owner}", name:"{name}") {{
         description
         ref(qualifiedName: "master") {{
           name
@@ -456,7 +456,7 @@ def getFirstQueryCmtMsgPerRepo(owner,name,first):
 def getNextQueryCmtMsgPerRepo(owner,name,first,endCursor):
     query_next='''
     {{
-      repository(owner:{owner}, name:{name}) {{
+      repository(owner:"{owner}", name:"{name}") {{
         description
         ref(qualifiedName: "master") {{
           name
@@ -487,7 +487,7 @@ def getNextQueryCmtMsgPerRepo(owner,name,first,endCursor):
 def getFirstQueryMsgPerPRRepo(owner,name,id_pr,first):
     query_first='''
 {{
-  repository(owner: {owner}, name: {name}) {{
+  repository(owner: "{owner}", name: "{name}") {{
     pullRequest(number: {prID}) {{
       title
       bodyText
@@ -516,11 +516,11 @@ def getFirstQueryMsgPerPRRepo(owner,name,id_pr,first):
 def getNextQueryMsgPerPRRepo(owner,name,id_pr,first,endCursor):
     query_next='''
 {{
-  repository(owner: {owner}, name: {name}) {{
+  repository(owner: "{owner}", name: "{name}") {{
     pullRequest(number: {prID}) {{
       title
       bodyText
-      commits(first: {first} after: {endCursor}) {{
+      commits(first: {first} after: "{endCursor}") {{
         totalCount
           pageInfo{{
             hasNextPage
@@ -637,7 +637,8 @@ fragment repoInfo on Repository {{
                     }}
                 }}
 """
-    variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size}
+#     variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size}
+    variables={"queryString": "org:"+org+''' is:pr closed:<2019-02-01 \\"regular expression\\" OR \\"regex\\" in:title,body''',"first": first}
     return query_first.format(**variables)
 
 def getNextQueryPRsInOrg(org,first,endCursor):
@@ -735,7 +736,8 @@ fragment repoInfo on Repository {{
                     }}
                 }}
 """
-    variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size,"endCursor":endCursor}
+#     variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size,"endCursor":endCursor}
+    variables={"queryString": "org:"+org+r''' is:pr closed:<2019-02-01 \\"regular expression\\" OR \\"regex\\" in:title,body''',"first": first,"endCursor":endCursor}
     return query_next.format(**variables)
 if __name__ == '__main__':
 #     checkTokenLimit()

@@ -10,21 +10,6 @@ import csv
 from datetime import datetime
 from itertools import chain
 
-
-
-
-    
-
-    
-    list_projInfo=[buildProjInfo(dict_repoUrl2file[url]) for url in dict_repoUrl2file]
-    pickle.dump(list_projInfo,open("/home/peipei/GitHubIssues/list_projInfo","wb"))          
-
-    keys = list_projInfo[0].keys()
-    with open("/home/peipei/GitHubIssues/list_projInfo.csv", 'w', encoding='utf8', newline='') as output_file:
-        dict_writer = csv.DictWriter(output_file,fieldnames=list_projInfo[0].keys())
-        dict_writer.writeheader()
-        dict_writer.writerows(list_projInfo)
-  
         
 def getFilteredIssues(filteredProj): 
     # filteredProj: List
