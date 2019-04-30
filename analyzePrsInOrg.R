@@ -1,5 +1,5 @@
-if (getwd()!="/home/peipei/GitHubIssues/Orgs/apache"){
-  setwd("/home/peipei/GitHubIssues/Orgs/apache")
+if (getwd()!="/home/peipei/GitHubIssues/Orgs/"){
+  setwd("/home/peipei/GitHubIssues/Orgs/")
 }
 library(ggplot2)
 getSummary=function(data){
@@ -11,7 +11,10 @@ getSummary=function(data){
   # return(c(t,quantile(data, c(0.1,0.25,0.5,0.75,0.9,0.95,0.98,0.99))))
 }
 
-data_file="repo_lang_file.csv"
+# data_file="apache/repo_lang_file.csv"
+data_file="mozilla/repo_lang_file.csv"
+# data_file="google/repo_lang_file.csv"
+# data_file="facebook/repo_lang_file.csv"
 repoLangFile=read.csv(file=data_file,head=TRUE,colClasses=c("character","character","character","logical"), sep=",")
 repoLangFile=as.data.frame(repoLangFile)
 
@@ -23,13 +26,13 @@ t=split(repoLangFile,f=repoLangFile$repo_url) ## length(t)==num(repos)
 sort(table(sapply(t, function(repo)unique(repo$primeLang)))) ###  repos in primary langs
 
 tt=split(repoLangFile,f=repoLangFile$primeLang)
-for(lang in c("Java","Python","JavaScript","Ruby")){
+for(lang in c("Java","Python","JavaScript","PHP","Ruby")){
   print(lang)
   print(getSummary(table(tt[[lang]]$repo_url)))  ## prs/repo in each lang
 }
 
 table(repoLangFile$merged) ## merged prs vs not merged prs
-for(lang in c("Java","Python","JavaScript","Ruby")){
+for(lang in c("Java","Python","JavaScript","PHP","Ruby")){
   print(lang)
   print(table(tt[[lang]]$merged))  ## merged/repo in each lang
 }
@@ -40,18 +43,57 @@ s$primeLang=sapply(s$repo,function(x)unique(repoLangFile[which(repoLangFile$repo
 s$merged=sapply(s$repo,function(x)length(which(repoLangFile$repo_url==x & repoLangFile$merged==TRUE)))
 s$notMerged=sapply(s$repo,function(x)length(which(repoLangFile$repo_url==x & repoLangFile$merged==FALSE)))
 
+s[s$primeLang=="Python",]
+
 
 selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/pulsar'),]
+# selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/kafka'),]
+print(selected$pr_url)
 
-t=repoInfo[which(repoInfo$type=="php"),]
-nrow(t)
-sum(t$files)
-getSummary(t$files)
 
-t=repoInfo[which(repoInfo$type=="javascript"),]
-nrow(t)
-sum(t$files)
-getSummary(t$files)
+getRepoPrsLang=function(filename,org){
+  print(filename)
+  print(org)
+  org_repoLangFile=read.csv(file=filename,head=TRUE,colClasses=c("character","character","character","logical"), sep=",")
+  org_repoLangFile=as.data.frame(org_repoLangFile)
+  m=unique(org_repoLangFile[,c("repo_url","primeLang")])
+  for (i in 1:nrow(m)){
+    repo_url=m[i,"repo_url"]
+    prs=org_repoLangFile[org_repoLangFile$repo_url==m[i,"repo_url"],]
+    m[i,"prs"]=nrow(prs)
+  }
+  m$org=org
+  return(m)
+}
+  
+filenames=c("apache/repo_lang_file.csv","mozilla/repo_lang_file.csv","google/repo_lang_file.csv","facebook/repo_lang_file.csv")
+orgs=c("apache","mozilla","google","facebook")
+res=data.frame()
+for (i in 1:length(filenames)) {
+  res=rbind(res,getRepoPrsLang(filenames[i],orgs[i]))
+}
+sort(table(res$primeLang)) ## repos in primary lang of repo
+dim(table(res$repo_url)) ## == # of repos
+getSummary(res$prs) ### prs/repo 
+
+t=split(res,f=res$org) ## length(t)==num(repos)
+sapply(t,function(x)getSummary(x$prs))
+wilcox.test(t$apache$prs,t$mozilla$prs)
+wilcox.test(t$apache$prs,t$google$prs)
+wilcox.test(t$apache$prs,t$facebook$prs)
+wilcox.test(t$mozilla$prs,t$facebook$prs)
+wilcox.test(t$mozilla$prs,t$google$prs)
+wilcox.test(t$google$prs,t$facebook$prs)
+
+tt=split(res,f=res$primeLang)
+sapply(tt,function(x)getSummary(x$prs))
+wilcox.test(tt$Python$prs,t$Java$prs)
+wilcox.test(tt$Python$prs,t$JavaScript$prs)
+wilcox.test(tt$Java$prs,t$JavaScript$prs)
+# wilcox.test(tt$Java$prs,t$PHP$prs)
+getSummary(tt[["Java"]]$prs)
+getSummary(tt[["JavaScript"]]$prs)
+getSummary(tt[["Python"]]$prs)
 
 p=ggplot()+theme_bw()
 p=p+geom_boxplot(data=repoInfo,aes(x=type,y=files,fill=type),alpha=0.4)

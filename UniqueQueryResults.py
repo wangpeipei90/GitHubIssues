@@ -55,7 +55,7 @@ def getMsgPerPRRepo(owner, name, id_pr, first):
     endCursor=data['data']['repository']['pullRequest']['commits']['pageInfo']['endCursor']
     data_msg=[cmt['node']['commit']['message'] for cmt in data['data']['repository']['pullRequest']['commits']['edges']]
     count=1
-    print("count:{} endCursor:{} size of data:{}".format(count,endCursor,len(data_msg)+2))
+#     print("count:{} endCursor:{} size of data:{}".format(count,endCursor,len(data_msg)+2))
     
     data_msg.extend([data['data']['repository']['pullRequest']['title'],data['data']['repository']['pullRequest']['bodyText']])
     
@@ -73,7 +73,7 @@ def getMsgPerPRRepo(owner, name, id_pr, first):
         data_msg.extend([cmt['node']['commit']['message'] for cmt in data['data']['repository']['pullRequest']['commits']['edges']])
         
         count+=1
-        print("count:{} endCursor:{} size of data:{}".format(count,endCursor,len(data_msg)))
+#         print("count:{} endCursor:{} size of data:{}".format(count,endCursor,len(data_msg)))
         
     issues=[api.getLinkedIssueNum(msg) for msg in set(data_msg) if msg is not None and msg!=""]
 #     print(issues)
@@ -84,8 +84,13 @@ def getMsgPerPRRepo(owner, name, id_pr, first):
 
 def getPRsInOrg(org,first,ws="/home/peipei/GitHubIssues/Orgs/"):
     query=GraphQLQuery.getFirstQueryPRsInOrg(org, first)
-    data=GraphQLQuery.run_query(query)
     
+    data=GraphQLQuery.run_query(query)
+    if 'data' not in data:
+        print(query)
+        pprint(data)
+        sys.exit(0)
+        
     hasNextPage=data['data']['search']['pageInfo']['hasNextPage']
     endCursor=data['data']['search']['pageInfo']['endCursor']
     
@@ -124,6 +129,6 @@ def getPRsInOrg(org,first,ws="/home/peipei/GitHubIssues/Orgs/"):
 
 if __name__ == '__main__':
 #     getCmtMsgPerRepo("PyGithub","PyGithub",'100')
-    getPRsInOrg("apache",10,ws="/home/peipei/GitHubIssues/Orgs/")
+    getPRsInOrg("ibm",10,ws="/home/peipei/GitHubIssues/Orgs/")
     pass
 

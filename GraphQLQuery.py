@@ -638,7 +638,7 @@ fragment repoInfo on Repository {{
                 }}
 """
 #     variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size}
-    variables={"queryString": "org:"+org+''' is:pr closed:<2019-02-01 \\"regular expression\\" OR \\"regex\\" in:title,body''',"first": first}
+    variables={"queryString": """org:"""+org+""" is:pr closed:<2019-02-01 \\"regular expression\\" OR \\"regex\\" in:title,body""","first": first}
     return query_first.format(**variables)
 
 def getNextQueryPRsInOrg(org,first,endCursor):
@@ -737,7 +737,7 @@ fragment repoInfo on Repository {{
                 }}
 """
 #     variables={"queryString": "org:"+org+" is:pr closed:<2019-02-01 `regular expression' OR regex in:title,body","first": res_size,"endCursor":endCursor}
-    variables={"queryString": "org:"+org+r''' is:pr closed:<2019-02-01 \\"regular expression\\" OR \\"regex\\" in:title,body''',"first": first,"endCursor":endCursor}
+    variables={"queryString": """org:"""+org+""" is:pr closed:<2019-02-01 \\"regular expression\\" OR \\"regex\\" in:title,body""","first": first,"endCursor":endCursor}
     return query_next.format(**variables)
 if __name__ == '__main__':
 #     checkTokenLimit()

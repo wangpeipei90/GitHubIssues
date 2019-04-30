@@ -24,7 +24,9 @@ def getLinkedIssueNum(msg):
 def isPRLinked2Issue(github,pr_url):
     ## with GitHub REST API V3
     # pr_url https://github.com/PyGithub/PyGithub/pull/1090
-    # return issue url: if not linked return empty list else return issue url string   
+    # return issue url: if not linked return empty list else return issue url string
+#     if pr_url=='https://github.com/RADAR-base/ManagementPortal/pull/364':
+#         print('hit')
     elements=pr_url.split("/")
 #     print(elements)
     owner,repo_name,is_pr,id=tuple(elements[3:])
@@ -44,6 +46,8 @@ def isPRLinked2Issue2(pr_url):
     ## with GitHub GraphQL API V4
     # pr_url https://github.com/PyGithub/PyGithub/pull/1090
     # return issue url: if not linked return empty list else return issue url string   
+    if pr_url=='https://github.com/RADAR-base/ManagementPortal/pull/364':
+        print('hit')
     elements=pr_url.split("/")
 #     print(elements)
     owner,repo_name,is_pr,id=tuple(elements[3:])
@@ -51,7 +55,7 @@ def isPRLinked2Issue2(pr_url):
         raise ValueError("isLinked2Issue should pass in a PR URL")
     
     isLinked=UniqueQueryResults.getMsgPerPRRepo(owner, repo_name, id, 10)
-    return ["{}issues/{}".format(pr_url[:pr_url.index(is_pr)],x) for x in isLinked]
+    return ["{}issues/{}".format(pr_url[:pr_url.index(is_pr)],x) for x in set(isLinked)]
 
 def getLang(file):
     # return from which lang the issue is found
@@ -222,7 +226,7 @@ def printInfo2CSV(file_data,file_csv):
 
 def getPRLinkedIssueInfo(url2info_file_data,g):
      
-    for lang in ["python","java","ruby","javascript","php"]:#
+    for lang in ["php"]:#"python","java","ruby","javascript","php"
         with open("/home/peipei/GitHubIssues/"+lang+"/dict_file2url","rb") as pickle_file:
             dict_file2url = pickle.load(pickle_file)
                         
@@ -231,12 +235,14 @@ def getPRLinkedIssueInfo(url2info_file_data,g):
             dict_url2info = pickle.load(pickle_file)
 
         dict_pr2issues={info['url']:isPRLinked2Issue(g,info['url']) for info in dict_url2info.values() if info['is_pr']}
+#         dict_pr2issues={info['url']:isPRLinked2Issue2(info['url']) for info in dict_url2info.values() if info['is_pr']}
         dict_pr2issues={pr_url:issue_urls for pr_url,issue_urls in dict_pr2issues.items() if len(issue_urls)>0}
         
         issue_urls=list(chain(*dict_pr2issues.values()))
         query_issue_urls=[issue_url for issue_url in issue_urls if issue_url in dict_url2info.keys()]
         print("in lang {} {} pull requests are linked with {} issues. Among them {} issues are also going to analyzed ".format(lang,len(dict_pr2issues),len(issue_urls),len(query_issue_urls)))
         pprint(issue_urls)    
+        pprint(list(dict_pr2issues.keys()))
 #         with open("/home/peipei/GitHubIssues/"+lang+file_csv, 'w', encoding='utf8', newline='') as output_file:
 #             dict_writer = csv.DictWriter(output_file,fieldnames=infos[0].keys())
 #             dict_writer.writeheader()
@@ -322,7 +328,7 @@ if __name__ == '__main__':
 #     printInfo2CSV("/dict_url2info_ff","/issueInfo_ff.csv")
     
     g = Github("870589d0ca53859c2e4e54f71b1bdce3af5e609f")
-    getPRLinkedIssueInfo("/dict_url2info_ff",g)
-#     getPRLinkedIssueInfo("/dict_url2info_f",g)
+#     getPRLinkedIssueInfo("/dict_url2info_ff",g)
+    getPRLinkedIssueInfo("/dict_url2info_f",g)
     pass
 
