@@ -37,7 +37,7 @@ subQueries_shortJS={"queryString": "'regex' state:closed updated:<2019-02-01 lan
 subQueries_shortPhp={"queryString": "'regex' state:closed updated:<2019-02-01 language:PHP","first": res_size}
 subQueries_shortRuby={"queryString": "'regex' state:closed updated:<2019-02-01 language:Ruby","first": res_size}
 
-
+#In REST, HTTP verbs determine the operation performed. In GraphQL, you'll provide a JSON-encoded body whether you're performing a query or a mutation, so the HTTP verb is POST. The exception is an introspection query, which is a simple GET to the endpoint.
 def run_query(query): # A simple function to use requests.post to make the API call. Note the json= section.
     request = requests.post('https://api.github.com/graphql', json={'query': query}, headers=headers)
 #     print("request return code - {}".format(request.status_code))
