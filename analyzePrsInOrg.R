@@ -45,8 +45,8 @@ s$notMerged=sapply(s$repo,function(x)length(which(repoLangFile$repo_url==x & rep
 
 s[s$primeLang=="Python",]
 
-
-selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/pulsar'),]
+selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/mozilla/treeherder'),]
+# selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/pulsar'),]
 # selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/kafka'),]
 print(selected$pr_url)
 
@@ -75,6 +75,7 @@ for (i in 1:length(filenames)) {
 sort(table(res$primeLang)) ## repos in primary lang of repo
 dim(table(res$repo_url)) ## == # of repos
 getSummary(res$prs) ### prs/repo 
+# sum(res[res$primeLang=="Java","prs"])
 
 t=split(res,f=res$org) ## length(t)==num(repos)
 sapply(t,function(x)getSummary(x$prs))
@@ -94,6 +95,7 @@ wilcox.test(tt$Java$prs,t$JavaScript$prs)
 getSummary(tt[["Java"]]$prs)
 getSummary(tt[["JavaScript"]]$prs)
 getSummary(tt[["Python"]]$prs)
+
 
 p=ggplot()+theme_bw()
 p=p+geom_boxplot(data=repoInfo,aes(x=type,y=files,fill=type),alpha=0.4)
