@@ -15,7 +15,7 @@ import re
 import UniqueQueryResults
 
 # keywords=["close","closes","closed","fix","fixes","fixed","resolve","resolves","resolved"]
-r=re.compile("(?i)(close|close[sd]|fix|fixe[sd]|resolve|resolve[sd]):?\s*#?(\d+)")
+r=re.compile("(?i)(close|close[sd]|fix|fixe[sd]|resolve|resolve[sd]):?[\w\s]*#?(\d+)")
 ws="/home/peipei/GitHubIssues/"
 def getLinkedIssueNum(msg):
     m=r.findall(msg)
@@ -309,7 +309,20 @@ def filterByIssue(keys=['duration','participants','comments','labels'],values=[1
         pickle.dump(dict_repo2info_ff,open("/home/peipei/GitHubIssues/"+lang+"/dict_repo2info_ff","wb"))
         
         print("after filtering by issue, {} issues in lang {} are from {} repos".format(len(dict_url2info_ff),lang,len(dict_repo2info_ff)))
-        
+
+def getPRInfo(github,pr_url):
+    ## with GitHub REST API V3
+    # pr_url https://github.com/PyGithub/PyGithub/pull/1090
+    # return title, author
+    elements=pr_url.split("/")
+#     print(elements)
+    owner,repo_name,is_pr,id=tuple(elements[3:])
+    if is_pr!="pull":
+        raise ValueError("getPRInfo should pass in a PR URL")
+    repo=github.get_repo(owner+"/"+repo_name)
+    pr=repo.get_pull(int(id))
+    return [id,pr.user.login,pr.title,pr.merged]
+  
 if __name__ == '__main__':
 #     getUniqueIssuesInLang("python")
 #     getUniqueIssuesRepos()
