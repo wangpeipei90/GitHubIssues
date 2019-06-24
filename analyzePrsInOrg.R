@@ -2,6 +2,7 @@ if (getwd()!="/home/peipei/GitHubIssues/Orgs/"){
   setwd("/home/peipei/GitHubIssues/Orgs/")
 }
 library(ggplot2)
+library(fifer)
 getSummary=function(data){
   print(mean(data))
   print(min(data))
@@ -11,8 +12,8 @@ getSummary=function(data){
   # return(c(t,quantile(data, c(0.1,0.25,0.5,0.75,0.9,0.95,0.98,0.99))))
 }
 
-# data_file="apache/repo_lang_file.csv"
-data_file="mozilla/repo_lang_file.csv"
+data_file="apache/repo_lang_file.csv"
+#data_file="mozilla/repo_lang_file.csv"
 # data_file="google/repo_lang_file.csv"
 # data_file="facebook/repo_lang_file.csv"
 repoLangFile=read.csv(file=data_file,head=TRUE,colClasses=c("character","character","character","logical"), sep=",")
@@ -45,9 +46,10 @@ s$notMerged=sapply(s$repo,function(x)length(which(repoLangFile$repo_url==x & rep
 
 s[s$primeLang=="Python",]
 
-selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/mozilla/treeherder'),]
+#selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/mozilla/treeherder'),]
 # selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/pulsar'),]
-# selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/kafka'),]
+selected=repoLangFile[which(repoLangFile$repo_url=='https://github.com/apache/kafka'),]
+write.csv(selected,'apache_kafka.csv')
 print(selected$pr_url)
 
 
@@ -61,23 +63,38 @@ getRepoPrsLang=function(filename,org){
     repo_url=m[i,"repo_url"]
     prs=org_repoLangFile[org_repoLangFile$repo_url==m[i,"repo_url"],]
     m[i,"prs"]=nrow(prs)
+    m[i,"merged"]=nrow(prs[prs$merged==TRUE,])
+    m[i,"unmerged"]=nrow(prs[prs$merged==FALSE,])
   }
   m$org=org
-  return(m)
+  # return(m)
+  org_repoLangFile$org=org
+  return(org_repoLangFile)
 }
-  
+##### For overall process across organizations
 filenames=c("apache/repo_lang_file.csv","mozilla/repo_lang_file.csv","google/repo_lang_file.csv","facebook/repo_lang_file.csv")
 orgs=c("apache","mozilla","google","facebook")
 res=data.frame()
 for (i in 1:length(filenames)) {
   res=rbind(res,getRepoPrsLang(filenames[i],orgs[i]))
 }
+res=res[res$primeLang %in% c("Java","JavaScript","Python"),]
+###Stratified Sampling
+out=stratified(res, c("merged","primeLang","org"), .1)
+
 sort(table(res$primeLang)) ## repos in primary lang of repo
 dim(table(res$repo_url)) ## == # of repos
 getSummary(res$prs) ### prs/repo 
 # sum(res[res$primeLang=="Java","prs"])
 
 t=split(res,f=res$org) ## length(t)==num(repos)
+sapply(t,FUN = function(x)c("all"=nrow(x),"merged"=sum(x$merged),"unmerged"=nrow(x)-sum(x$merged)))
+ot=split(out,f=out$org)
+stat_ot=sapply(ot,FUN = function(x)c("all"=nrow(x),"merged"=sum(x$merged),"unmerged"=nrow(x)-sum(x$merged)))
+stat_ot=cbind(stat_ot,"total"=apply(stat_ot,1,sum))
+print(stat_ot)
+
+
 sapply(t,function(x)getSummary(x$prs))
 wilcox.test(t$apache$prs,t$mozilla$prs)
 wilcox.test(t$apache$prs,t$google$prs)
@@ -87,15 +104,27 @@ wilcox.test(t$mozilla$prs,t$google$prs)
 wilcox.test(t$google$prs,t$facebook$prs)
 
 tt=split(res,f=res$primeLang)
+sapply(tt,FUN = function(x)c("all"=nrow(x),"merged"=sum(x$merged),"unmerged"=nrow(x)-sum(x$merged)))
+
+ott=split(out,f=out$primeLang)
+stat_ott=sapply(ott,FUN = function(x)c("all"=nrow(x),"merged"=sum(x$merged),"unmerged"=nrow(x)-sum(x$merged)))
+stat_ott=cbind(stat_ott,"total"=apply(stat_ott,1,sum))
+print(stat_ott)
+
+write.csv(out,'strata_sampling.csv')
+
+# ttt=tt[c("Java","JavaScript","Python")]
+# sapply(ttt,FUN = function(x)c("all"=sum(x$prs),"merged"=sum(x$merged),"unmerged"=sum(x$unmerged)))
+
 sapply(tt,function(x)getSummary(x$prs))
 wilcox.test(tt$Python$prs,t$Java$prs)
 wilcox.test(tt$Python$prs,t$JavaScript$prs)
 wilcox.test(tt$Java$prs,t$JavaScript$prs)
 # wilcox.test(tt$Java$prs,t$PHP$prs)
-getSummary(tt[["Java"]]$prs)
-getSummary(tt[["JavaScript"]]$prs)
-getSummary(tt[["Python"]]$prs)
-
+# getSummary(tt[["Java"]]$prs)
+# getSummary(tt[["JavaScript"]]$prs)
+# getSummary(tt[["Python"]]$prs)
+sapply(ttt,function(x)getSummary(x$prs))
 
 p=ggplot()+theme_bw()
 p=p+geom_boxplot(data=repoInfo,aes(x=type,y=files,fill=type),alpha=0.4)
@@ -105,6 +134,7 @@ p=p+labs(x="lang",y="# issue per repo",fill="Lang")
 p=p+stat_summary(fun.y=mean, geom="point", shape=20, size=10, color="red", fill="red") 
 # p=p+scale_x_discrete(labels=c("Intersection","Addition","Removal"))
 #ggsave("abc")
+
 
 
 data_file=paste("/home/peipei/GitHubIssues",lang,name, sep = "/", collapse = NULL)
